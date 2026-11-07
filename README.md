@@ -102,10 +102,11 @@ Create and activate the Conda environment:
 conda create -n sgr-xp python=3.11 -y
 conda activate sgr-xp
 python -m pip install numpy pandas matplotlib astropy astroquery tqdm ipywidgets jupyter ipykernel
+```
 
 ---
 
-## What each section does
+# # What each section does
 
 
 ### 1. Download the Sagittarius catalog
