@@ -1,457 +1,271 @@
-# Sagittarius Gaia XP Catalog Downloader
+# Sagittarius Stream Stellar Labels from Gaia XP
 
-This notebook builds a Gaia DR3 XP-continuous-spectra sample for stars in the Sagittarius (Sgr) catalog available through VizieR as `J/MNRAS/501/2279`.
+This project prepares Gaia DR3 BP/RP XP spectra for two related datasets:
 
-The workflow:
+1. **Sagittarius application sample:** stars from the Vasiliev et al. Sagittarius catalogue (`J/MNRAS/501/2279`).
+2. **APOGEE training sample:** APOGEE DR17 stars with stellar labels and verified Gaia DR3 XP-continuous availability.
 
-1. Downloads the Sgr catalog from VizieR.
-2. Extracts the Gaia DR2 source IDs stored in the catalog.
-3. Cross-matches Gaia DR2 source IDs to Gaia DR3 using the Gaia Archive `dr2_neighbourhood` table.
-4. Separates unambiguous and ambiguous DR2 → DR3 matches.
-5. Keeps unambiguous DR3 sources with available XP continuous spectra.
-6. Downloads the Gaia DR3 XP continuous coefficients in restart-safe batches.
-7. Saves each successful XP batch as a FITS file.
+The eventual model will predict:
 
-The notebook is designed to tolerate temporary Gaia Archive failures by retrying requests and automatically splitting failed batches into smaller groups.
+- effective temperature (`TEFF`)
+- surface gravity (`LOGG`)
+- metallicity (`FE_H`)
+- nitrogen-to-oxygen abundance (`N_O = N_FE - O_FE`)
+- aluminum-to-iron abundance (`AL_FE`)
 
----
+## Current status
+
+### Sagittarius sample
+
+- 55,192 catalogue sources
+- 42,386 sources with exactly one Gaia DR3 candidate
+- 3,628 sources with multiple Gaia DR3 candidates
+- 27,069 unambiguous sources with XP continuous spectra
+- 25,850 XP sources downloaded
+- 1,219 XP sources pending
+- 95.50% download completion
+
+### APOGEE training metadata
+
+- 733,901 APOGEE DR17 rows loaded
+- 448,728 valid unique Gaia source IDs
+- 448,728 IDs verified in Gaia DR3
+- 405,160 sources with XP continuous spectra available
+- 334,486 sources retained after target-related warning filtering
+- 0 duplicate final source IDs
+
+The APOGEE XP coefficients have not yet been downloaded. A test request reached Gaia DataLink but returned HTTP 503 Service Unavailable. The metadata and XP-availability results remain valid, and the download is designed to resume when the service is available.
+
+## Repository layout
+
+```text
+.
+├── README.md
+├── references.bib
+├── report_ps5.pdf
+├── src/
+│   ├── reading_catalog_ps4.ipynb
+│   └── build_training_set.ipynb
+└── data/
+    ├── data.txt
+    ├── apogee_training_cutflow.csv
+    ├── apogee_training_summary.json
+    └── apogee_training_xp_source_ids.csv
+```
+
+Large downloaded FITS files, Gaia query batches, and XP batch directories are generated locally and should not be committed to normal Git history.
 
 ## Requirements
 
-A recent Python 3 installation is recommended. The notebook uses:
+The notebooks are designed for Python 3.11 and use:
 
 - `numpy`
 - `pandas`
 - `matplotlib`
 - `astropy`
 - `astroquery`
-- Jupyter Notebook or JupyterLab
+- `tqdm`
+- `ipywidgets`
+- `ipykernel`
 
-The standard-library packages `pathlib`, `time`, and `gc` are also used and do not need to be installed separately.
+VS Code also requires the Microsoft **Python** and **Jupyter** extensions.
 
-### Install with pip
+## Environment setup
 
-```bash
-python -m pip install numpy pandas matplotlib astropy astroquery jupyterlab
-```
-
-### Optional: create a conda environment
+Clone the repository and open it in VS Code:
 
 ```bash
-conda create -n sgr-xp python=3.11 numpy pandas matplotlib astropy astroquery jupyterlab
-conda activate sgr-xp
+git clone https://github.com/LightsRedemption/DeepLearning_TeamAstro
+cd DeepLearning_TeamAstro
+code .
 ```
 
-No local input catalog is required because the Sgr catalog is downloaded directly from VizieR. An internet connection is required for both the VizieR and Gaia Archive queries.
-
----
-
-## Repository layout
-
-A simple repository can look like:
-
-```text
-.
-├── reading_catalog.ipynb
-├── README.md
-└── Vasiliev_Sgr_XP_batches/   # created automatically when XP downloads begin
-```
-
-During execution the notebook also creates:
-
-```text
-vasiliev_sgr.fits
-```
-
-which is a local FITS copy of the VizieR Sgr catalog.
-
----
-
-## Running the notebook
-
-Clone the repository and enter it:
-
-```bash
-git clone <YOUR-REPOSITORY-URL>
-cd <YOUR-REPOSITORY-NAME>
-```
-
-Activate the environment containing the required packages, then start JupyterLab:
-
-```bash
-jupyter lab
-```
-
-Open `reading_catalog.ipynb` and run the cells from top to bottom.
-
-You can also launch the notebook directly with:
-
-```bash
-jupyter lab reading_catalog.ipynb
-```
-
-If your notebook has a different filename, replace `reading_catalog.ipynb` with that filename.
-
----
-
-## Running the PS4 Notebook
-
-Create and activate the Conda environment:
+In VS Code, open **Terminal > New Terminal** and run:
 
 ```bash
 conda create -n sgr-xp python=3.11 -y
 conda activate sgr-xp
-python -m pip install numpy pandas matplotlib astropy astroquery tqdm ipywidgets jupyter ipykernel
+python -m pip install numpy pandas matplotlib astropy astroquery tqdm ipywidgets ipykernel
+python -m ipykernel install --user --name sgr-xp --display-name "sgr-xp"
 ```
 
----
+Open a notebook in VS Code, select **Kernel > Select Another Kernel > Python Environments**, and choose `sgr-xp`.
 
-## What each section does
-
-
-### 1. Download the Sagittarius catalog
-
-The notebook queries VizieR with:
+To confirm the selected environment, run:
 
 ```python
-catalogs = viz.get_catalogs("J/MNRAS/501/2279")
+import sys
+print(sys.executable)
 ```
 
-and loads the first returned table as the Sgr catalog.
+The printed path should contain `sgr-xp`.
 
-The current catalog contains 55,192 rows in the notebook run included with this project.
+## Running the Sagittarius notebook
 
-The notebook also inspects which stars have metallicity measurements and which of those measurements are identified with the APOGEE reference flag used in the catalog.
-
-### 2. Extract Gaia DR2 source IDs
-
-The `SimbadName` column contains values such as:
+Open:
 
 ```text
-Gaia DR2 2422822873087610624
+src/reading_catalog_ps4.ipynb
 ```
 
-The notebook extracts the numeric Gaia DR2 identifier and converts it to a 64-bit integer before uploading the IDs to the Gaia Archive.
+Select the `sgr-xp` kernel, then run the cells from top to bottom. The notebook:
 
-### 3. Cross-match Gaia DR2 to Gaia DR3
+1. obtains the 55,192-row Sagittarius catalogue from VizieR;
+2. extracts Gaia DR2 source IDs;
+3. joins the IDs through `gaiadr3.dr2_neighbourhood` and `gaiadr3.gaia_source`;
+4. separates unique and ambiguous DR2-to-DR3 candidates;
+5. retains unique DR3 sources with `has_xp_continuous = True`;
+6. downloads XP continuous products in restart-safe batches; and
+7. saves summaries, missing IDs, crossmatch tables, and combined products.
 
-The notebook uploads the DR2 IDs to the Gaia Archive and joins them against:
+To resume an interrupted XP download, rerun the setup and crossmatch sections before rerunning the download section. Existing completed batch files will be detected and skipped.
+
+If Gaia DataLink returns HTTP 503, rerun the download section later. Existing completed XP files are scanned and skipped.
+
+## Building the APOGEE DR17 training metadata
+
+Open:
 
 ```text
-gaiadr3.dr2_neighbourhood
+src/build_training_set.ipynb
 ```
 
-and:
-
-```text
-gaiadr3.gaia_source
-```
-
-The query returns the DR3 source ID along with useful information including:
-
-- DR2–DR3 angular distance
-- magnitude difference
-- sky position
-- Gaia G, BP, and RP photometry
-- BP-RP color
-- RUWE
-- XP continuous availability
-- XP sampled availability
-
-### 4. Remove ambiguous DR2 → DR3 matches
-
-Some Gaia DR2 stars can have multiple DR3 candidate matches. The notebook separates these from stars that have exactly one DR3 match.
-
-The ambiguous matches are inspected with histograms of angular separation and magnitude difference, while the XP download sample uses only the unambiguous matches.
-
-For the run saved in the notebook, the unambiguous sample contains 50,074 DR3 matches.
-
-### 5. Select sources with XP continuous spectra
-
-Only sources satisfying:
+Keep this setting disabled for the metadata-only run:
 
 ```python
-has_xp_continuous == True
+DOWNLOAD_XP = False
 ```
 
-are sent to the XP downloader.
+Select the `sgr-xp` kernel and run the notebook from top to bottom. Keep `DOWNLOAD_XP = False` for the metadata-only workflow. The saved Gaia query batches are reused on later runs, so successfully completed 40,000-ID queries do not need to be submitted again.
 
-In the current notebook run, this gives 32,468 sources, or about 64.84% of the unambiguous DR3 sample.
+The notebook performs the following steps:
 
-### 6. Download Gaia XP coefficients
+1. downloads or reuses `allStarLite-dr17-synspec_rev1.fits`;
+2. verifies the required APOGEE columns;
+3. calculates `N_O = N_FE - O_FE`;
+4. rejects `STAR_BAD` sources;
+5. requires `SNR >= 70`;
+6. requires all five targets to be finite;
+7. applies `3500 <= TEFF <= 7000` and `0 <= LOGG <= 5`;
+8. requires valid unique Gaia source IDs;
+9. verifies those IDs in Gaia DR3 using restart-safe 40,000-ID query batches;
+10. retains sources with XP continuous spectra available; and
+11. removes `TEFF_WARN`, `LOGG_WARN`, `M_H_WARN`, and `N_M_WARN` sources.
 
-The downloader uses:
+`VMICRO_WARN` is recorded but is not used as an exclusion because microturbulence is not a prediction target.
 
-```python
-Gaia.load_data(
-    ids=...,
-    data_release="Gaia DR3",
-    retrieval_type="XP_CONTINUOUS",
-    data_structure="RAW",
-    format="votable"
-)
-```
-
-The returned VOTables are converted to Astropy tables and saved as FITS files.
-
----
-
-## Download settings
-
-The main settings are defined near the XP download section:
-
-```python
-OUTDIR = Path("Vasiliev_Sgr_XP_batches")
-BATCH_SIZE = 250
-MIN_BATCH_SIZE = 10
-MAX_RETRIES = 3
-PAUSE_SECONDS = 2
-```
-
-### `OUTDIR`
-
-Directory in which downloaded XP FITS files are stored.
-
-### `BATCH_SIZE`
-
-Number of stars requested in each top-level Gaia request.
-
-The notebook currently uses:
-
-```python
-BATCH_SIZE = 250
-```
-
-A larger value may be faster when the Gaia Archive is responsive, but smaller batches are generally more robust.
-
-### `MIN_BATCH_SIZE`
-
-If a request repeatedly fails, the code recursively splits the request into smaller groups. It stops splitting once a failed group reaches this size.
-
-### `MAX_RETRIES`
-
-Number of times a request is attempted before the code splits the group into smaller requests.
-
-### `PAUSE_SECONDS`
-
-Delay between successful requests. This reduces the rate at which requests are sent to the Gaia Archive.
-
----
-
-## Restarting or resuming a download
-
-The downloader is restart-safe.
-
-Before beginning the main download loop, it scans:
+### Verified training metadata results
 
 ```text
-Vasiliev_Sgr_XP_batches/xp_*.fits
+APOGEE rows loaded:                 733,901
+Valid unique Gaia source IDs:       448,728
+IDs verified in Gaia DR3:           448,728
+IDs not returned:                         0
+XP-continuous sources:              405,160
+Final warning-filtered sample:      334,486
+Duplicate final source IDs:               0
 ```
 
-Each existing FITS file is opened and its `source_id` column is collected. Those stars are then removed from the list of targets that still need to be downloaded.
-
-Therefore, if the notebook stops because of:
-
-- a lost internet connection,
-- Gaia Archive downtime,
-- a Jupyter kernel restart,
-- a computer restart, or
-- a manually stopped run,
-
-rerun the notebook cells required to recreate `xp_ids`, then rerun the XP download section. Existing stars will be skipped automatically.
-
-You should see output similar to:
+### Generated audit files
 
 ```text
-Existing batch files: 42
-Already downloaded : 10,500
-Remaining          : 21,968
+data/apogee_training_cutflow.csv
+data/apogee_training_summary.json
+data/apogee_training_xp_source_ids.csv
+data/apogee_gaia_unverified_ids.csv
 ```
 
-Do **not** delete `Vasiliev_Sgr_XP_batches/` if you want the notebook to resume from previous progress.
-
----
-
-## Retry and failure handling
-
-Each XP request is attempted up to `MAX_RETRIES` times.
-
-Between failed attempts, the notebook waits progressively longer before trying again. With the default settings the waits are approximately 10 seconds and then 20 seconds before the final attempt.
-
-If all attempts fail and the group contains more than `MIN_BATCH_SIZE` sources, the group is split in half and both halves are attempted recursively.
-
-For example:
+The notebook also generates the larger local file:
 
 ```text
-250 -> 125 + 125
+data/apogee_dr17_gaia_dr3_xp_training_metadata_quality.csv
 ```
 
-If a group is already at or below `MIN_BATCH_SIZE` and still cannot be downloaded, those source IDs are added to the in-memory `failed_ids` list.
+This 66 MB metadata file is generated locally and excluded from Git tracking. It can be regenerated by running the notebook.
 
-You can inspect them after the run with:
+## Downloading the APOGEE XP coefficients
+
+The XP download is the final major external data-acquisition step before feature preprocessing and model training.
+
+First, run the 10-source test at the end of `build_training_set.ipynb`. Only continue if the test succeeds and the returned product structure has been inspected.
+
+Then change:
 
 ```python
-len(failed_ids)
-failed_ids[:20]
+DOWNLOAD_XP = False
 ```
 
-Note that `failed_ids` is not currently written to disk automatically.
-
----
-
-## Output files
-
-XP downloads are written to:
-
-```text
-Vasiliev_Sgr_XP_batches/
-```
-
-Files use names of the form:
-
-```text
-xp_<first_source_id>_<last_source_id>_<number_of_rows>.fits
-```
-
-For example:
-
-```text
-xp_19182943147267968_6736970526664168832_250.fits
-```
-
-Each file contains the Gaia DR3 XP continuous coefficients returned for that successful request.
-
-The exact number of rows in a file may be smaller than the number requested. If Gaia omits any requested source IDs, the notebook identifies the missing IDs and recursively attempts to download them again.
-
----
-
-## Reading the downloaded XP files
-
-A single batch can be opened with Astropy:
+to:
 
 ```python
-from astropy.table import Table
-
-xp = Table.read(
-    "Vasiliev_Sgr_XP_batches/xp_19182943147267968_6736970526664168832_250.fits"
-)
-
-print(xp.colnames)
-print(xp[:5])
+DOWNLOAD_XP = True
 ```
 
-To find all downloaded batches:
+The downloader uses the 334,486-source quality-filtered list:
 
 ```python
-from pathlib import Path
-
-files = sorted(Path("Vasiliev_Sgr_XP_batches").glob("xp_*.fits"))
-print(f"Found {len(files)} XP batch files")
+training_meta_quality["source_id"]
 ```
 
----
+Downloaded batches are written to:
 
-## Recommended `.gitignore`
-
-The Gaia XP files can become large and normally should not be committed directly to GitHub.
-
-Add the following to `.gitignore` if you want the repository to contain the code but not the downloaded data:
-
-```gitignore
-# Downloaded Gaia data
-Vasiliev_Sgr_XP_batches/
-vasiliev_sgr.fits
-
-# Jupyter temporary files
-.ipynb_checkpoints/
-
-# Python cache
-__pycache__/
-*.pyc
+```text
+data/apogee_xp_batches/
 ```
 
-If you intentionally want to distribute the downloaded catalog products, consider storing them in a dedicated data release rather than normal Git history.
+Failures are recorded in:
 
----
+```text
+data/apogee_xp_download_failures.csv
+```
+
+Do not enable the full download while Gaia DataLink is returning HTTP 503. Existing nonempty batch files are skipped when the section is rerun.
+
+## Remaining work before model training
+
+After the APOGEE XP download succeeds:
+
+1. combine all XP FITS batches;
+2. verify requested, downloaded, missing, unexpected, and duplicate source IDs;
+3. require exactly 55 BP and 55 RP coefficients per source;
+4. divide each coefficient group by its first coefficient;
+5. remove each normalized first coefficient;
+6. concatenate 54 BP and 54 RP values into 108 input features;
+7. preserve source-ID, feature, and label alignment;
+8. create reproducible 70%/15%/15% train, validation, and test splits using seed 42; and
+9. fit feature and target scalers using only the training partition.
 
 ## Common issues
 
-### Gaia request fails or times out
+### Gaia query returns exactly 50,000 rows
 
-This can happen when the Gaia Archive is busy. The notebook already retries failed requests and reduces their size automatically.
+A single uploaded-table query may be capped at 50,000 rows. The training notebook avoids this by querying Gaia in 40,000-ID batches, saving each completed batch, and combining the results.
 
-If failures are frequent, try lowering:
+### HTTP 503 from Gaia DataLink
 
-```python
-BATCH_SIZE = 100
-```
-
-or increasing:
-
-```python
-PAUSE_SECONDS = 5
-```
-
-Then rerun the download section. Previously downloaded stars will be skipped.
+HTTP 503 indicates temporary maintenance or capacity problems. Keep `DOWNLOAD_XP = False`, retain completed files, and retry later. The metadata and XP-availability query do not need to be repeated if their saved batch files are intact.
 
 ### `ModuleNotFoundError`
 
-Install the required dependencies:
+Activate the environment and reinstall the dependencies:
 
 ```bash
-python -m pip install numpy pandas matplotlib astropy astroquery jupyterlab
+conda activate sgr-xp
+python -m pip install numpy pandas matplotlib astropy astroquery tqdm ipywidgets ipykernel
 ```
 
-### FITS warnings involving `[Fe/H]`
+### Corrupted XP batch
 
-Astropy may display FITS compatibility warnings for the original catalog column named `[Fe/H]` or for long FITS metadata keywords. These warnings are generated while writing the VizieR catalog and do not necessarily indicate that the file was not written successfully.
-
-### A saved XP FITS file cannot be read
-
-`get_already_downloaded()` prints a warning and ignores unreadable files. The associated sources may therefore be requested again when the notebook resumes.
-
-If a batch file is corrupted, remove that individual file and rerun the download section.
-
----
-
-## Notes
-
-- The notebook uses public VizieR and Gaia Archive services, so network availability can affect execution.
-- The counts listed above reflect the run stored in the current notebook and may change if the upstream catalogs or services change.
-- Only unambiguous DR2 → DR3 matches are included in the XP download sample.
-- The notebook requests **raw Gaia DR3 XP continuous coefficients**, not a wavelength-sampled spectrum.
-
----
+Delete only the unreadable batch and rerun the corresponding download section. Do not delete the entire batch directory, because completed files are used for restart-safe progress.
 
 ## Data sources
 
-This project accesses:
-
-- VizieR catalog `J/MNRAS/501/2279`
+- VizieR catalogue `J/MNRAS/501/2279`
+- APOGEE DR17 `allStarLite-dr17-synspec_rev1.fits`
 - Gaia DR3 `gaia_source`
 - Gaia DR3 `dr2_neighbourhood`
-- Gaia DR3 XP continuous spectra through the Gaia DataLink service
+- Gaia DR3 XP continuous products through Gaia DataLink
 
-When using these data in scientific work, please cite the original VizieR catalog publication and the appropriate Gaia DR3 papers/data-release documentation.
+## Authors
 
----
-
-## Author
-
-Giovanny Rosales
-
-## Current PS4 Results
-
-The submitted pipeline processed the complete 55,192-row Vasiliev
-Sagittarius catalog.
-
-- 55,192 valid Gaia DR2 identifiers
-- 42,386 sources with exactly one Gaia DR3 candidate
-- 3,628 sources with multiple Gaia DR3 candidates
-- 27,069 unambiguous sources with XP continuous spectra
-- 25,850 XP sources downloaded
-- 1,219 XP sources still pending
-- 95.50% download completion
-
-The remaining downloads were delayed by temporary HTTP 503 responses
-from the Gaia DataLink service. Downloads are resumable.
+Giovanny Rosales and Hunter Morgan

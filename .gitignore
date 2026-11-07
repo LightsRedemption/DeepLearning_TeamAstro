@@ -16,16 +16,14 @@ __pycache__/
 Thumbs.db
 desktop.ini
 
-# Virtual environments
+# Virtual and Conda environments
 venv/
 .venv/
 env/
 .env/
-
-# Conda environments
 .conda/
 
-# IDE / editor files
+# IDE and editor settings
 .vscode/
 .idea/
 
@@ -34,54 +32,53 @@ env/
 *.temp
 *.log
 
-# Python packaging/build files
+# Python packaging and build files
 build/
 dist/
 *.egg-info/
 
-# Downloaded Gaia XP batch files
-data/Vasiliev_Sgr_XP_batches/
-
-# Combined generated dataset
-data/vasiliev_sgr_xp_combined.fits
-
-# Local catalog copies and interrupted downloads
+# Large Sagittarius source files and generated products
 data/vasiliev_sgr.fits
 data/vasiliev_sgr.csv
 data/vasiliev_sgr.tsv
 data/vasiliev_sgr_tail.tsv
+data/vasiliev_sgr_with_dr2_ids.csv
+data/vasiliev_sgr_xp_combined.fits
 
-# Failure and missing-ID logs
+# Sagittarius XP download batches
+data/Vasiliev_Sgr_XP_batches/
+data/sgr_xp_batches/
+
+# Generated Sagittarius intermediate tables
+data/sgr_dr2_dr3_all_matches.csv
+
+# Sagittarius failure and missing-ID logs
 data/sgr_xp_failed_ids.csv
 data/sgr_xp_missing_ids.csv
 
-# Jupyter temporary files
-.ipynb_checkpoints/
+# Large APOGEE source catalogue
+data/allStarLite-dr17-synspec_rev1.fits
 
-# Python cache
-__pycache__/
-*.pyc
+# Large APOGEE metadata exports
+data/apogee_dr17_gaia_dr3_xp_training_metadata.csv
+data/apogee_dr17_gaia_dr3_xp_training_metadata_quality.csv
 
-# Local Python environment
-.venv/
+# Temporary Gaia upload tables
+data/apogee_gaia_ids.vot
+data/apogee_gaia_ids_batch_*.vot
 
-# Jupyter temporary files
-.ipynb_checkpoints/
-src/.ipynb_checkpoints/
+# Restart-safe Gaia query batches
+data/apogee_gaia_query_batches/
 
-# Generated Gaia XP downloads
-data/Vasiliev_Sgr_XP_batches/
-data/vasiliev_sgr_xp_combined.fits
+# APOGEE XP downloads and failure logs
+data/apogee_xp_batches/
+data/apogee_xp_download_failures.csv
 
-# Local source-catalog files
-data/vasiliev_sgr.fits
-data/vasiliev_sgr.csv
-data/vasiliev_sgr.tsv
-data/vasiliev_sgr_tail.tsv
+# Redundant intermediate cutflow
+data/apogee_training_cutflow_complete.csv
 
-# Generated intermediate catalog
-data/vasiliev_sgr_with_dr2_ids.csv
-
-# Python cache
-__pycache__/
-*.pyc
+# Later model artifacts
+models/
+*.pt
+*.pth
+*.joblib

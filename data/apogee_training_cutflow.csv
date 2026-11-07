@@ -1,0 +1,10 @@
+cut,before,after,removed
+ASPCAP result is not STAR_BAD,733901,691591,42310
+SNR >= 70,691591,597478,94113
+all five targets finite,597478,495611,101867
+3500 <= TEFF <= 7000,495611,495611,0
+0 <= LOGG <= 5,495611,495464,147
+Valid unique Gaia source ID,495464,448728,46736
+Verified in Gaia DR3,448728,448728,0
+Gaia XP continuous available,448728,405160,43568
+No target-related ASPCAP warnings,405160,334486,70674

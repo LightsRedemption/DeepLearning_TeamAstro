@@ -1,0 +1,37 @@
+{
+  "allstar_rows_loaded": 733901,
+  "rows_after_star_bad_cut": 691591,
+  "rows_after_snr_cut": 597478,
+  "rows_after_finite_target_cut": 495611,
+  "rows_after_teff_cut": 495611,
+  "rows_after_logg_cut": 495464,
+  "valid_unique_gaia_ids": 448728,
+  "gaia_dr3_ids_verified": 448728,
+  "gaia_dr3_ids_not_returned": 0,
+  "rows_with_xp_continuous": 405160,
+  "rows_after_target_warning_filter": 334486,
+  "duplicate_final_source_ids": 0,
+  "snr_min": 70,
+  "teff_range": [
+    3500,
+    7000
+  ],
+  "logg_range": [
+    0,
+    5
+  ],
+  "targets": [
+    "TEFF",
+    "LOGG",
+    "FE_H",
+    "N_O",
+    "AL_FE"
+  ],
+  "n_o_definition": "N_FE - O_FE",
+  "excluded_warning_bits": [
+    "TEFF_WARN",
+    "LOGG_WARN",
+    "M_H_WARN",
+    "N_M_WARN"
+  ]
+}
