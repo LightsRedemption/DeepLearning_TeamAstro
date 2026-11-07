@@ -96,6 +96,15 @@ If your notebook has a different filename, replace `reading_catalog.ipynb` with 
 
 ## What each section does
 
+## Running the PS4 Notebook
+
+Create and activate the Conda environment:
+
+```bash
+conda create -n sgr-xp python=3.11 -y
+conda activate sgr-xp
+python -m pip install numpy pandas matplotlib astropy astroquery tqdm ipywidgets jupyter ipykernel
+
 ### 1. Download the Sagittarius catalog
 
 The notebook queries VizieR with:
@@ -427,3 +436,18 @@ When using these data in scientific work, please cite the original VizieR catalo
 
 Giovanny Rosales
 
+## Current PS4 Results
+
+The submitted pipeline processed the complete 55,192-row Vasiliev
+Sagittarius catalog.
+
+- 55,192 valid Gaia DR2 identifiers
+- 42,386 sources with exactly one Gaia DR3 candidate
+- 3,628 sources with multiple Gaia DR3 candidates
+- 27,069 unambiguous sources with XP continuous spectra
+- 25,850 XP sources downloaded
+- 1,219 XP sources still pending
+- 95.50% download completion
+
+The remaining downloads were delayed by temporary HTTP 503 responses
+from the Gaia DataLink service. Downloads are resumable.

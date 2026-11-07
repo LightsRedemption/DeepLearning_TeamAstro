@@ -1,0 +1,9 @@
+measurement,value
+Vasiliev catalog rows,55192
+Stars with valid Gaia DR2 IDs,55192
+Unique Gaia DR2 IDs,55192
+DR2 stars with exactly one DR3 candidate,42386
+DR2 stars with multiple DR3 candidates,3628
+Unambiguous DR3 matches with XP,27069
+XP sources downloaded,25850
+XP sources still missing,1219

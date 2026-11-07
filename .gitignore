@@ -38,3 +38,50 @@ env/
 build/
 dist/
 *.egg-info/
+
+# Downloaded Gaia XP batch files
+data/Vasiliev_Sgr_XP_batches/
+
+# Combined generated dataset
+data/vasiliev_sgr_xp_combined.fits
+
+# Local catalog copies and interrupted downloads
+data/vasiliev_sgr.fits
+data/vasiliev_sgr.csv
+data/vasiliev_sgr.tsv
+data/vasiliev_sgr_tail.tsv
+
+# Failure and missing-ID logs
+data/sgr_xp_failed_ids.csv
+data/sgr_xp_missing_ids.csv
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local Python environment
+.venv/
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+src/.ipynb_checkpoints/
+
+# Generated Gaia XP downloads
+data/Vasiliev_Sgr_XP_batches/
+data/vasiliev_sgr_xp_combined.fits
+
+# Local source-catalog files
+data/vasiliev_sgr.fits
+data/vasiliev_sgr.csv
+data/vasiliev_sgr.tsv
+data/vasiliev_sgr_tail.tsv
+
+# Generated intermediate catalog
+data/vasiliev_sgr_with_dr2_ids.csv
+
+# Python cache
+__pycache__/
+*.pyc

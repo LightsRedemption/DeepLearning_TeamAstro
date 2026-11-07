@@ -1,0 +1,32 @@
+Project datasets
+================
+
+1. Vasiliev Sagittarius Catalog
+Source:
+https://vizier.cds.unistra.fr/viz-bin/VizieR?-source=J/MNRAS/501/2279
+
+The catalog is retrieved by src/reading_catalog_ps4.ipynb through
+astroquery.vizier. Generated local copies are stored in data/ as
+vasiliev_sgr.fits and vasiliev_sgr.csv.
+
+2. Gaia DR3 XP Continuous Spectra
+Source:
+https://gea.esac.esa.int/archive/
+
+Gaia DR3 source IDs are obtained by matching the Gaia DR2 identifiers
+from the Vasiliev catalog through gaiadr3.dr2_neighbourhood. XP
+continuous coefficients are downloaded with astroquery.gaia and stored
+in data/Vasiliev_Sgr_XP_batches/.
+
+Run src/reading_catalog_ps4.ipynb from top to bottom to recreate these
+files. Downloads are resumable.
+
+3. APOGEE DR17 allStar Catalog
+Source:
+https://www.sdss4.org/dr17/irspec/spectro_data/
+
+The APOGEE DR17 allStar catalog supplies the stellar labels used for
+model training. The full catalog is not stored in this repository
+because of its size. The training pipeline should download or read the
+catalog, apply the documented quality cuts, and crossmatch the selected
+stars with Gaia DR3 XP continuous spectra.
