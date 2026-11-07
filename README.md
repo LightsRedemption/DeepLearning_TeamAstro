@@ -94,8 +94,6 @@ If your notebook has a different filename, replace `reading_catalog.ipynb` with 
 
 ---
 
-## What each section does
-
 ## Running the PS4 Notebook
 
 Create and activate the Conda environment:
@@ -104,6 +102,11 @@ Create and activate the Conda environment:
 conda create -n sgr-xp python=3.11 -y
 conda activate sgr-xp
 python -m pip install numpy pandas matplotlib astropy astroquery tqdm ipywidgets jupyter ipykernel
+
+---
+
+## What each section does
+
 
 ### 1. Download the Sagittarius catalog
 
