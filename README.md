@@ -106,7 +106,7 @@ python -m pip install numpy pandas matplotlib astropy astroquery tqdm ipywidgets
 
 ---
 
-# # What each section does
+## What each section does
 
 
 ### 1. Download the Sagittarius catalog
