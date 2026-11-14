@@ -1,0 +1,11 @@
+{
+  "batch_files": 893,
+  "rows_before_deduplication": 44650,
+  "unique_rows": 44650,
+  "duplicate_source_ids": 0,
+  "requested_source_ids": 50000,
+  "missing_source_ids": 27720,
+  "unexpected_source_ids": 22370,
+  "rows_with_valid_55_55_lengths": 44650,
+  "rows_with_invalid_lengths": 0
+}

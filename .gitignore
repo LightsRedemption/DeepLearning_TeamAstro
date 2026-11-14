@@ -82,3 +82,7 @@ models/
 *.pt
 *.pth
 *.joblib
+
+!results/baseline_mlp/best_model.pt
+!results/baseline_mlp/feature_scaler.joblib
+!results/baseline_mlp/target_scaler.joblib

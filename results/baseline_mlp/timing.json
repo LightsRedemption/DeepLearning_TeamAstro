@@ -1,0 +1,9 @@
+{
+  "device": "mps",
+  "completed_epochs": 138,
+  "best_epoch": 113,
+  "best_validation_loss": 0.2182813435792923,
+  "total_training_seconds": 31.336191167123616,
+  "average_epoch_seconds": 0.22707384903712766,
+  "estimated_200_epoch_seconds": 45.41476980742553
+}

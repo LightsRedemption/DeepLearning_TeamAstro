@@ -1,0 +1,19 @@
+{
+  "input": "data/vasiliev_sgr_xp_combined.fits",
+  "model": "results/baseline_mlp/best_model.pt",
+  "model_name": "baseline_mlp",
+  "device": "mps",
+  "input_rows": 29886,
+  "accepted_rows": 29886,
+  "rejected_rows": 0,
+  "input_features": 108,
+  "targets": [
+    "TEFF",
+    "LOGG",
+    "FE_H",
+    "N_O",
+    "AL_FE"
+  ],
+  "prediction_output": "results/sgr_preliminary_predictions.csv",
+  "rejection_output": "results/sgr_preliminary_predictions_rejected.csv"
+}

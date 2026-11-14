@@ -1,0 +1,27 @@
+{
+  "selected_model": "baseline_mlp",
+  "selected_checkpoint": "results/baseline_mlp/best_model.pt",
+  "best_epoch": 113,
+  "best_standardized_validation_loss": 0.218281,
+  "training_sources": 31255,
+  "validation_sources": 6697,
+  "test_sources": 6698,
+  "total_available_sources": 44650,
+  "input_features": 108,
+  "targets": [
+    "TEFF",
+    "LOGG",
+    "FE_H",
+    "N_O",
+    "AL_FE"
+  ],
+  "selection_reason": "The baseline MLP achieved the best overall validation performance while using a smaller architecture than the deeper MLP.",
+  "model_families": {
+    "ridge": "regularized linear regression",
+    "extra_trees": "randomized tree ensemble",
+    "baseline_mlp": "feedforward neural network"
+  },
+  "additional_experiment": {
+    "deeper_mlp": "three-hidden-layer neural network architecture"
+  }
+}
